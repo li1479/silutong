@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8">
+		<title>AI对话问答</title>
+		<!-- 引入 Vue 2 -->
+		<!-- 引入 Vue 2 -->
+		<script src="../js/vue@2.js"></script>
+		<!-- 引入 Element UI -->
+		<link href="../js/element-2.15.6/index.css" type="text/css" rel="stylesheet" />
+		<link href="../css/controller.css" type="text/css" rel="stylesheet" />
+		<script src="../js/element-2.15.6/index.js" type="text/javascript" charset="utf-8"></script>
+		<style>
+			body,
+			html {
+				margin: 0;
+				height: 100%;
+				font-family: Arial, sans-serif;
+			}
+
+			#app {
+				display: flex;
+				flex-direction: column;
+				height: 100vh;
+			}
+
+			.chat-container {
+				flex: 1;
+				overflow-y: auto;
+				padding: 20px;
+			}
+
+			.message {
+				margin-bottom: 15px;
+			}
+
+			.user .el-card__body {
+				background-color: #d9ecFF;
+				color: black;
+				text-align: right;
+			}
+
+			.ai .el-card__body {
+				background-color: #ffffff;
+				color: black;
+				text-align: left;
+			}
+
+			.footer {
+				position: fixed;
+				bottom: 2%;
+				left: 0;
+				width: 100%;
+				height: 50px;
+				background-color: #f0f0f0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border-top: 1px solid #ddd;
+				z-index: 1000;
+			}
+
+			.footer2 {
+				position: absolute;
+				bottom: 130%;
+				left: 1%;
+				width: 100%;
+				z-index: 1000;
+			}
+
+			.el-button {
+				padding: 25px 20px;
+			}
+
+			.selected {
+				background-color: #409EFF !important;
+				border-color: #409EFF !important;
+				color: #fff !important;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<el-header style="background-color: #EBEEF5; line-height: 40px;height: 40px; border-radius: 10px;">
+				DeepSeek-R1
+			</el-header>
+			<div class="chat-container">
+				<div v-for="(msg, index) in messages" :key="index" class="message">
+					<el-card :class="msg.sender">
+						{{ msg.text }}
+					</el-card>
+				</div>
+			</div>
+
+
+			<div class="footer">
+				<div class="footer2">
+					<el-button round :class="{'selected': isSelected1}" @click="toggleSelection1" icon="el-icon-s-opportunity">
+						{{ isSelected1 ? '深度思考' : '深度思考' }}
+					</el-button>
+					<el-button round :class="{'selected': isSelected2}" @click="toggleSelection2" icon="el-icon-magic-stick">
+						{{ isSelected2 ? '全网搜索' : '全网搜索' }}
+					</el-button>
+				</div>
+				<el-input type="textarea" :rows="3" placeholder="请输入内容..." v-model="inputMessage"
+					@keyup.enter.native="sendMessage" class="custom-textarea">
+				</el-input>
+
+				<el-button type="primary" @click="sendMessage" class='el-icon-position'
+					style="font-size: 20px;">发送</el-button>
+			</div>
+		</div>
+
+		<script>
+			new Vue({
+				el: '#app',
+				data() {
+					return {
+						inputMessage: '',
+						checkboxGroup2: ['深度思考'],
+						messages: [],
+						isSelected1: false, // 跟踪按钮是否被选中
+						isSelected2: false, // 跟踪按钮是否被选中
+						cities: ['深度思考', '全网搜索']
+					};
+				},
+				methods: {
+					sendMessage() {
+						if (this.inputMessage.trim()) {
+							// 添加用户消息
+							this.messages.push({
+								sender: 'user',
+								text: this.inputMessage
+							});
+							this.inputMessage = '';
+
+							// 模拟AI回复
+							setTimeout(() => {
+								const response = this.generateAIResponse();
+								this.messages.push({
+									sender: 'ai',
+									text: response
+								});
+							}, 500);
+						}
+					},
+					toggleSelection1() {
+						this.isSelected1 = !this.isSelected1; // 切换选中状态
+					},
+					toggleSelection2() {
+						this.isSelected2 = !this.isSelected2; // 切换选中状态
+					},
+					generateAIResponse() {
+						// 简单模拟逻辑，可以替换为调用API
+						return '暂未开放本功能。。。';
+					}
+				}
+			});
+		</script>
+	</body>
+</html>
