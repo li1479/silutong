@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>丝路通</title>
+	<script src="src/js/vue/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="src/js/element-2.15.6/index.js" type="text/javascript" charset="utf-8"></script>
+	<script src="src/js/echarts.min.js"></script>
+		<script src="src/js/datadba.js"></script>
+	<link href="src/js/element-2.15.6/index.css" type="text/css" rel="stylesheet" />
+	<link href="src/css/controller.css" type="text/css" rel="stylesheet" />
+</head>
+<body>
+	<div id="app">
+		<el-row>
+			<el-col :span="3">
+				<div class="grid-content bg-purple">
+					<h1 style="margin-top: 10px;margin-left: 10%;"><i class="el-icon-ship"></i> 丝路通</h1>
+				</div>
+			</el-col>
+			<el-col :span="21">
+				<div class="grid-content bg-purple-light">
+					<el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal"
+						@select="handleSelect">
+						<el-menu-item index="1">首页</el-menu-item>
+						<el-menu-item index="2">国家总览</el-menu-item>
+						<el-submenu index="3">
+							<template slot="title">国家详情</template>
+							<el-menu-item v-for="item in countryList"
+								:index="item.name">{{item.name}}</el-menu-item>
+						</el-submenu>
+						<el-menu-item index="4" disabled>会员通道</el-menu-item>
+						<el-menu-item index="5">AI法律工具</el-menu-item>
+						<el-menu-item index="6" style="float: right;">
+							<i class="el-icon-user"></i>
+								管理员</el-menu-item>
+					</el-menu>
+				</div>
+			</el-col>
+		</el-row>
+		<el-carousel height="300px" style="width: 99%;margin-left: 0.5%" :interval="4000" arrow="always"
+			v-if="showHome">
+			<el-carousel-item class="block" style="float: left" v-for="item in imglList" :key="item.id">
+				<el-image style="width: 100%; height: 300px;" :src="item.url" :fit="fit">
+				</el-image>
+			</el-carousel-item>
+		</el-carousel>
+		
+		<!-- 为 ECharts 准备一个定义了宽高的 DOM -->
+		<div id="main" style="width: 99%;height:500px;margin-left: 0.5%;margin-top: 1%;" v-if="showHome"></div>
+		<!-- 固定在底部的区域 -->
+		   <div class="footer" >
+		     <i style="float: right;margin-right: 2%;margin-top: 15px;">
+				 <i class="el-icon-office-building"></i> 北京市百瑞（济南）律师事务所 &nbsp;&nbsp; &nbsp;  <i class="el-icon-phone"></i>  
+				 联系我们 0123456789
+			 </i>
+		   </div>
+		   
+		<el-page-header @back="goBack" content="总览信息" v-if="showOverview"></el-page-header>
+		<el-card class="box-card"
+			style="width: 97%;margin-left: 1.5%;margin-top:0.5%;height: 80vh;overflow-y: auto;" v-if="showOverview">
+			<el-collapse v-model="activeNames2" @change="handleChange" style="width: 98%;margin-left: 1%">
+				<el-collapse-item v-for="item in countryList" :title="item.name" :name="item.name">
+					<el-table :data="item.tableData" border style="width: 100%">
+						<el-table-column prop="line1" label="国家概况">
+							<template slot-scope="scope">
+								<span v-html="scope.row.line1"></span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="line2" label="基础设施与规划">
+							<template slot-scope="scope">
+								<span v-html="scope.row.line2"></span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="line3" label="对外国投资合作的法律法规">
+							<template slot-scope="scope">
+								<span v-html="scope.row.line3"></span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="line4" label="需要办理的相关手续">
+							<template slot-scope="scope">
+								<span v-html="scope.row.line4"></span>
+							</template>
+						</el-table-column>
+						<el-table-column label="操作" width="110">
+							<template slot-scope="scope">
+								<el-button size="mini" @click="showCountry(item.name)">查看详情</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</el-collapse-item>
+			</el-collapse>
+		</el-card>
+		<el-page-header @back="goBack" :content="countryName + '详细信息'" v-if="showMsg"></el-page-header>
+		<el-card class="box-card"
+			style="width: 97%;margin-left: 1.5%;margin-top:0.5%;height: 80vh;overflow-y: auto;" v-if="showMsg">
+			<el-tabs v-model="activeName3"  @tab-click="handleClick" style="margin-top: 5px;">
+				<el-tab-pane :label="countryMsg.tab1" name="first">
+					<div v-html="countryMsg.line1"></div>
+				</el-tab-pane>
+				<el-tab-pane :label="countryMsg.tab2" name="second">
+					<div v-html="countryMsg.line2"></div>
+				</el-tab-pane>
+				<el-tab-pane :label="countryMsg.tab3" name="third">
+					<div v-html="countryMsg.line3"></div>
+				</el-tab-pane>
+				<el-tab-pane :label="countryMsg.tab4" name="fourth">
+					<div v-html="countryMsg.line4"></div>
+				</el-tab-pane>
+				<el-tab-pane :label="countryMsg.tab5" name="five" :v-if="countryMsg.tab5 != ''">
+					<div v-html="countryMsg.line5"></div>
+				</el-tab-pane>
+			</el-tabs>
+		</el-card>
+		<el-page-header @back="goBack" content="AI法律工具" v-if="showAi"></el-page-header>
+					<iframe src="src/html/aiSeek.html"  v-if="showAi"
+					style="width: 97%;margin-left: 1.5%;margin-top:0.5%;height: 82vh;overflow-y: auto;border: 0;"></iframe>
+	</div>
+	<script>
+		
+		var app = new Vue({
+		el: '#app',
+		data: {
+			activeIndex: '1',
+			activeNames2: '',
+			activeName3: 'first',
+			countryName: '',
+			showHome: true,
+			showMsg: false,
+			showOverview: false,
+			showAi:false,
+			countryMsg: {
+				tab1: '',
+				tab2: '',
+				tab3: '',
+				tab4: '',
+				tab5: '',
+				line1: '',
+				line2: '',
+				line3: '',
+				line4: '',
+				line5: ''
+			},
+			textarea: '',
+			checkboxGroup2: '',
+			imglList: [{
+				id: 1,
+				url: 'src/img/111.jpg'
+			}, {
+				id: 2,
+				url: 'src/img/222.jpg'
+			}, {
+				id: 3,
+				url: 'src/img/333.jpg'
+			}],
+			countryMsgH: countryMsgHDba,
+			countryList: countryListDba,
+		},
+		mounted() {
+			var _that = this;
+			this.$nextTick(() => {});
+		},
+		methods: {
+			handleSelect(key, keyPath) {
+				if (key == '1') {
+					this.showHome = true;
+					this.showOverview = false;
+					this.showMsg = false;
+					this.showAi = false;
+					setTimeout(function(){
+						initEcharts();
+					}, 100);
+				} else if (key == '2') {
+					this.showHome = false;
+					this.showOverview = true;
+					this.showMsg = false;
+					this.showAi = false;
+				} else if (key == '3') {
+				} else if (key == '5') {
+					this.showHome = false;
+					this.showOverview = false;
+					this.showMsg = false;
+					this.showAi = true;
+				} else if (key == '6') {
+					this.$message("功能开发中...")
+				} else {
+					this.showHome = false;
+					this.showOverview = false;
+					this.showMsg = true;
+					this.showAi = false;
+					this.showCountry(key)
+				}
+			},
+			showCountry(index) {
+				this.countryName = index;
+				for (let line of this.countryList) {
+					if (line.name == index) {
+						let line1 = JSON.parse(JSON.stringify(line.tableData[0].line1.replaceAll("div", "h3")));
+						let line2 = JSON.parse(JSON.stringify(line.tableData[0].line2.replaceAll("div", "h3")));
+						let line3 = JSON.parse(JSON.stringify(line.tableData[0].line3.replaceAll("div", "h3")));
+						let line4 = JSON.parse(JSON.stringify(line.tableData[0].line4.replaceAll("div", "h3")));
+						let line5 = '';
+						let tab5 = '';
+						if (line.tableData.some(item => item.hasOwnProperty("line5"))) {
+							line5 = JSON.parse(JSON.stringify(line.tableData[0].line5.replaceAll("div", "h3")));
+							tab5 = line.tableData[0].tab5;
+						}
+						this.countryMsg = {
+							tab1: line.tableData[0].tab1,
+							tab2: line.tableData[0].tab2,
+							tab3: line.tableData[0].tab3,
+							tab4: line.tableData[0].tab4,
+							tab5: tab5,
+							line1: line1,
+							line2: line2,
+							line3: line3,
+							line4: line4,
+							line5: line5
+						}
+					}
+				}
+				if (index == '哈萨克斯坦') {
+					this.countryMsg = this.countryMsgH;
+				}
+				this.activeName3 = 'first';
+				this.showHome = false;
+				this.showOverview = false;
+				this.showMsg = true;
+			},
+			goBack() {
+				this.showHome = true;
+				this.showOverview = false;
+				this.showMsg = false;
+				this.showAi = false;
+				this.activeName3 = 'first';
+				this.countryMsg = {
+					line1: '',
+					line2: '',
+					line3: '',
+					line4: '',
+					line5: '',
+				},
+				setTimeout(function(){
+					initEcharts();
+				}, 100);
+			},
+			andleClick(tab, event) {}
+		},
+		watch: {}
+		});
+		
+		initEcharts();
+		function initEcharts () {
+			// 基于准备好的dom，初始化echarts实例
+			var myChart = echarts.init(document.getElementById('main'));
+			var categoryHome = [];
+			var categoryData = [];
+			for (let line of app.countryList) {
+				categoryHome.push(line.name);
+				let color = '#67C23A';
+				if (line.count > 30 && line.count < 61) {
+					color = '#E6A23C';
+				} else if (line.count > 60) {
+					color = '#F56C6C';
+				}
+				let lineData = {
+					value: line.count,
+					itemStyle: {
+						color: color
+					}
+				};
+				categoryData.push(lineData);
+			}
+			// 指定图表的配置项和数据
+			var option = {
+				title: {
+					text: '实时风险可视化'
+				},
+				tooltip: {
+					trigger: 'axis',
+					axisPointer: {
+						type: 'shadow'
+					}
+				},
+				grid: {
+					left: '3%',
+					right: '4%',
+					bottom: '3%',
+					containLabel: true
+				},
+				xAxis: [{
+					type: 'category',
+					data: categoryHome,
+					axisLabel: {
+						interval: 0,
+						rotate: "45"
+					},
+					axisTick: {
+						alignWithLabel: true
+					}
+				}],
+				yAxis: [{
+					type: 'value'
+				}],
+				series: [{
+					name: '综合评分',
+					type: 'bar',
+					barWidth: '60%',
+					data: categoryData
+				}]
+			};
+			// 使用刚指定的配置项和数据显示图表。
+			myChart.setOption(option);
+		}
+		
+		
+	function hasKeyInMap(map, key) {
+	  let hasKey = false;
+	  map.forEach((value, mapKey) => {
+	    if (mapKey === key) {
+	      hasKey = true;
+	    }
+	  });
+	  return hasKey;
+	}
+	</script>
+</body>
+</html>
